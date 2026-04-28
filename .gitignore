@@ -1,0 +1,12 @@
+/target
+**/*.rs.bk
+*.log
+bench_large_data.bin
+test_data.bin
+ring_temp_file_*.txt
+tokio_temp_file_*.txt
+temp_file_*.txt
+std_app.log
+tokio_app.log
+ring_app.log
+index.html
