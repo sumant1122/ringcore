@@ -1,6 +1,14 @@
 # RingRing: A Minimalist io_uring Async Runtime
 
-RingRing is a "from scratch" implementation of an asynchronous Rust runtime powered by Linux's `io_uring`. It demonstrates the fundamental mechanics of async/await by bridging the gap between high-level `Future` traits and low-level kernel submission queues.
+RingRing is a minimal async runtime written from scratch in Rust, built directly on Linux’s io_uring.
+
+It exposes how Rust’s Future-based async model maps to real kernel operations by implementing:
+
+* a custom task scheduler
+* a waker system
+* an event loop backed by io_uring submission/completion queues
+
+Unlike high-level runtimes, RingRing focuses on transparency over abstraction—making it easier to understand how async/await actually works under the hood.
 
 ## Architecture
 
