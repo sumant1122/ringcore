@@ -37,19 +37,34 @@ run_net_bench() {
     CLIENT_BIN=$2
     $SERVER_BIN > /dev/null 2>&1 &
     PID=$!
-    sleep 1
+    sleep 2
     # Standard client: 100 requests in 12.828445ms
-    RESULT=$($CLIENT_BIN | grep "in" | sed 's/.*in //')
-    kill $PID
-    wait $PID 2>/dev/null
+    # RingCore Stress Client: Finished 200 tasks in 64.848107ms
+    RESULT=$($CLIENT_BIN | grep "Finished" | sed 's/.*in //')
+    if [ -z "$RESULT" ]; then
+        # Fallback for simple clients that don't say "Finished"
+        RESULT=$($CLIENT_BIN | grep "in" | sed 's/.*in //')
+    fi
+    kill $PID 2>/dev/null || true
+    wait $PID 2>/dev/null || true
     echo "$RESULT"
 }
-
 NET_STD=$(run_net_bench "./target/release/examples/std_http_server" "./target/release/examples/std_http_client")
 NET_TOKIO=$(run_net_bench "./target/release/examples/tokio_http_server" "./target/release/examples/tokio_http_client")
 NET_RING=$(run_net_bench "./target/release/examples/http_server" "./target/release/examples/http_client")
 
-# 5. Results Summary
+# 5. High Concurrency Networking (1000 requests, 200 concurrent tasks)
+echo -e "[5/5] Benchmarking Stress Test (1000 total, 200 concurrent)..."
+NET_STD_STRESS=$(run_net_bench "./target/release/examples/std_http_server" "./target/release/examples/std_http_stress_client")
+NET_TOKIO_STRESS=$(run_net_bench "./target/release/examples/tokio_http_server" "./target/release/examples/tokio_http_stress_client")
+NET_RING_STRESS=$(run_net_bench "./target/release/examples/http_server" "./target/release/examples/http_stress_client")
+
+# 6. Fixed Buffer Gain (100MB File)
+echo -e "[6/6] Benchmarking Fixed Buffer Gain..."
+RING_STD_BUF=$(./target/release/examples/standard_buffer_bench "$TEST_FILE" | grep "in" | sed 's/.*in //')
+RING_FIX_BUF=$(./target/release/examples/fixed_buffer_bench "$TEST_FILE" | grep "in" | sed 's/.*in //')
+
+# 7. Results Summary
 echo -e "\n====================================================="
 echo "                FINAL BENCHMARK RESULTS               "
 echo "====================================================="
@@ -58,8 +73,12 @@ echo "-----------------------------------------------------"
 printf "%-20s | %-12s | %-12s | %-12s\n" "Seq Cat (100MB)" "$STD_CAT_TIME" "$TOKIO_CAT_TIME" "$RING_CAT_TIME"
 printf "%-20s | %-12s | %-12s | %-12s\n" "Conc Reads (100f)" "$STD_CONC" "$TOKIO_CONC" "$RING_CONC"
 printf "%-20s | %-12s | %-12s | %-12s\n" "HTTP (100 reqs)" "$NET_STD" "$NET_TOKIO" "$NET_RING"
+printf "%-20s | %-12s | %-12s | %-12s\n" "Stress (1k reqs)" "$NET_STD_STRESS" "$NET_TOKIO_STRESS" "$NET_RING_STRESS"
+printf "%-20s | %-12s | %-12s | %-12s\n" "Fixed Buf Gain" "N/A" "N/A" "$RING_STD_BUF -> $RING_FIX_BUF"
+echo "====================================================="
 
-# 5. Timer Accuracy (Informational)
+# 8. Timer Accuracy (Informational)
+
 echo -e "\n[Bonus] Comparing Timer Accuracy (1s sleep)..."
 run_timer() {
     ./target/release/examples/$1 | grep "1 second passed" | sed 's/.*at //'
