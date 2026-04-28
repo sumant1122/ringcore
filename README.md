@@ -1,6 +1,6 @@
-# RingRing: A Minimalist io_uring Async Runtime
+# RingCore: A Minimalist io_uring Async Runtime
 
-RingRing is a minimal async runtime written from scratch in Rust, built directly on Linux’s io_uring.
+RingCore is a minimal async runtime written from scratch in Rust, built directly on Linux’s io_uring.
 
 It exposes how Rust’s Future-based async model maps to real kernel operations by implementing:
 
@@ -8,7 +8,7 @@ It exposes how Rust’s Future-based async model maps to real kernel operations 
 * a waker system
 * an event loop backed by io_uring submission/completion queues
 
-Unlike high-level runtimes, RingRing focuses on transparency over abstraction—making it easier to understand how async/await actually works under the hood.
+Unlike high-level runtimes, RingCore focuses on transparency over abstraction—making it easier to understand how async/await actually works under the hood.
 
 ## Architecture
 
@@ -55,7 +55,7 @@ With `io_uring`:
 
 ## Benchmarks
 
-We compared RingRing against the Rust Standard Library and Tokio on a Debian 13 (Kernel 6.12) system.
+We compared RingCore against the Rust Standard Library and Tokio on a Debian 13 (Kernel 6.12) system.
 
 ### 1. File I/O (Cat 100MB File)
 Sequential read and write performance.
@@ -64,20 +64,20 @@ Sequential read and write performance.
 |---------|-----------|-------------|
 | **Standard (`std::fs`)** | 0.057s | 0.016s |
 | **Tokio (epoll + thread pool)** | 0.461s | 0.376s |
-| **RingRing (`io_uring`)** | **0.088s** | **0.036s** |
+| **RingCore (`io_uring`)** | **0.088s** | **0.036s** |
 
-*Note: RingRing significantly outperforms Tokio on file I/O because it uses true asynchronous kernel operations instead of a blocking thread pool.*
+*Note: RingCore significantly outperforms Tokio on file I/O because it uses true asynchronous kernel operations instead of a blocking thread pool.*
 
 ### 2. Networking (100 HTTP Requests)
 Total time for 100 sequential GET requests.
 
-| Server / Client | Std Client | Tokio Client | RingRing Client |
+| Server / Client | Std Client | Tokio Client | RingCore Client |
 |-----------------|------------|--------------|-----------------|
 | **Std Server** | 12.8ms | 13.1ms | 13.4ms |
 | **Tokio Server** | 17.8ms | 14.9ms | 10.4ms |
-| **RingRing Server** | **9.9ms** | **15.8ms** | **7.5ms** |
+| **RingCore Server** | **9.9ms** | **15.8ms** | **7.5ms** |
 
-*RingRing shows the lowest latency for high-frequency networking tasks by minimizing context switches and system call overhead.*
+*RingCore shows the lowest latency for high-frequency networking tasks by minimizing context switches and system call overhead.*
 
 ## Examples
 

@@ -1,7 +1,7 @@
-use ringring::{run, spawn, TcpListener, File};
+use ringcore::{run, spawn, TcpListener, File};
 use std::io;
 
-async fn serve_file(stream: ringring::TcpStream, path: String) -> io::Result<()> {
+async fn serve_file(stream: ringcore::TcpStream, path: String) -> io::Result<()> {
     let mut file = File::open(path).await?;
     let mut buf = [0u8; 8192];
     loop {

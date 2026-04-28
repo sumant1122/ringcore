@@ -1,4 +1,4 @@
-use ringring::{run, spawn, File};
+use ringcore::{run, spawn, File};
 use std::env;
 use std::io;
 
@@ -15,7 +15,7 @@ async fn cat(path: String) -> io::Result<()> {
         let mut written = 0;
         while written < n {
             // Use offset 0 for stdout (which is a pipe/char device when redirected)
-            let res = ringring::op::write(stdout_fd, buf[written..n].as_ptr(), (n - written) as u32, 0).await?;
+            let res = ringcore::op::write(stdout_fd, buf[written..n].as_ptr(), (n - written) as u32, 0).await?;
             written += res as usize;
         }
     }

@@ -1,4 +1,4 @@
-use ringring::{run, spawn, File, op};
+use ringcore::{run, spawn, File, op};
 use std::os::unix::io::AsRawFd;
 use std::time::Instant;
 
@@ -6,7 +6,7 @@ async fn logger(n: usize) -> std::io::Result<()> {
     let file = File::create("app.log").await?;
     
     let line1 = "INFO: Starting application\n";
-    let line2 = "DEBUG: Initializing ringring runtime\n";
+    let line2 = "DEBUG: Initializing ringcore runtime\n";
     let line3 = "WARN: No config file found, using defaults\n";
     
     let iovecs = [
@@ -20,7 +20,7 @@ async fn logger(n: usize) -> std::io::Result<()> {
     for _ in 0..n {
         let _ = op::writev(file.as_raw_fd(), iovecs.as_ptr(), 3, 0).await?;
     }
-    println!("RingRing logger: {} batches in {:?}", n, start.elapsed());
+    println!("RingCore logger: {} batches in {:?}", n, start.elapsed());
     
     Ok(())
 }

@@ -113,7 +113,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ringring"
+name = "ringcore"
 version = "0.1.0"
 dependencies = [
  "libc",

@@ -1,4 +1,4 @@
-use ringring::{run, spawn, op, TcpListener, TcpStream};
+use ringcore::{run, spawn, op, TcpListener, TcpStream};
 use std::io;
 use std::os::unix::io::AsRawFd;
 

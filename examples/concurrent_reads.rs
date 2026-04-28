@@ -1,4 +1,4 @@
-use ringring::{run, spawn, File};
+use ringcore::{run, spawn, File};
 use std::time::Instant;
 
 async fn read_file(id: usize) {
@@ -22,7 +22,7 @@ fn main() {
     }
 
     run();
-    println!("RingRing concurrent: 100 ops in {:?}", start.elapsed());
+    println!("RingCore concurrent: 100 ops in {:?}", start.elapsed());
 
     // Cleanup
     for i in 0..100 {

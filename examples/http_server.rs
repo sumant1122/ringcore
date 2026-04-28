@@ -1,7 +1,7 @@
-use ringring::{run, spawn, TcpListener};
+use ringcore::{run, spawn, TcpListener};
 use std::io;
 
-async fn handle_http(stream: ringring::TcpStream) -> io::Result<()> {
+async fn handle_http(stream: ringcore::TcpStream) -> io::Result<()> {
     let mut buf = [0u8; 1024];
     let n = stream.read(&mut buf).await?;
     let request = String::from_utf8_lossy(&buf[..n]);

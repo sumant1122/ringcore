@@ -1,4 +1,4 @@
-use ringring::{run, spawn, op, sys::__kernel_timespec};
+use ringcore::{run, spawn, op, sys::__kernel_timespec};
 use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};

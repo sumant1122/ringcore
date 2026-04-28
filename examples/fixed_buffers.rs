@@ -1,4 +1,4 @@
-use ringring::{run, spawn, init, op, executor::RING};
+use ringcore::{run, spawn, init, op, executor::RING};
 use std::io;
 
 async fn run_fixed_buffer_demo() -> io::Result<()> {

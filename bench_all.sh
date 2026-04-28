@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Master Benchmark Script for RingRing
+# Master Benchmark Script for RingCore
 set -e
 
 echo "====================================================="
-echo "   RingRing vs. Standard vs. Tokio Benchmark Suite   "
+echo "   RingCore vs. Standard vs. Tokio Benchmark Suite   "
 echo "====================================================="
 
 # 1. Compilation
@@ -53,7 +53,7 @@ NET_RING=$(run_net_bench "./target/release/examples/http_server" "./target/relea
 echo -e "\n====================================================="
 echo "                FINAL BENCHMARK RESULTS               "
 echo "====================================================="
-printf "%-20s | %-12s | %-12s | %-12s\n" "Test Case" "Standard" "Tokio" "RingRing"
+printf "%-20s | %-12s | %-12s | %-12s\n" "Test Case" "Standard" "Tokio" "RingCore"
 echo "-----------------------------------------------------"
 printf "%-20s | %-12s | %-12s | %-12s\n" "Seq Cat (100MB)" "$STD_CAT_TIME" "$TOKIO_CAT_TIME" "$RING_CAT_TIME"
 printf "%-20s | %-12s | %-12s | %-12s\n" "Conc Reads (100f)" "$STD_CONC" "$TOKIO_CONC" "$RING_CONC"

@@ -1,4 +1,4 @@
-use ringring::{run, spawn, op, sys::__kernel_timespec};
+use ringcore::{run, spawn, op, sys::__kernel_timespec};
 use std::time::{Duration, Instant};
 
 async fn sleep(duration: Duration) {

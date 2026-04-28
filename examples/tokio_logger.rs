@@ -7,7 +7,7 @@ async fn main() {
     let mut file = File::create("tokio_app.log").await.unwrap();
     
     let line1 = "INFO: Starting application\n";
-    let line2 = "DEBUG: Initializing ringring runtime\n";
+    let line2 = "DEBUG: Initializing ringcore runtime\n";
     let line3 = "WARN: No config file found, using defaults\n";
     
     let start = Instant::now();

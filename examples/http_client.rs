@@ -1,4 +1,4 @@
-use ringring::{run, spawn, TcpStream};
+use ringcore::{run, spawn, TcpStream};
 use std::time::Instant;
 
 async fn run_client(n_requests: usize) {
@@ -14,7 +14,7 @@ async fn run_client(n_requests: usize) {
     }
     
     let duration = start.elapsed();
-    println!("RingRing client: {} requests in {:?}", n_requests, duration);
+    println!("RingCore client: {} requests in {:?}", n_requests, duration);
 }
 
 fn main() {

@@ -1,4 +1,4 @@
-use ringring::{run, spawn, op};
+use ringcore::{run, spawn, op};
 use std::io;
 
 async fn ping(fd: i32) -> io::Result<()> {

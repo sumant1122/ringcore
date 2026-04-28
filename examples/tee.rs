@@ -1,4 +1,4 @@
-use ringring::{run, spawn, File, op};
+use ringcore::{run, spawn, File, op};
 use std::io;
 use std::rc::Rc;
 use std::cell::Cell;
@@ -39,7 +39,7 @@ async fn tee(file1_path: String, file2_path: String) -> io::Result<()> {
         // or we could use a better sync primitive if we had one)
         while done_count.get() < 2 {
             // Yield to executor
-            op::timeout(&mut ringring::sys::__kernel_timespec { tv_sec: 0, tv_nsec: 1000 }).await.unwrap();
+            op::timeout(&mut ringcore::sys::__kernel_timespec { tv_sec: 0, tv_nsec: 1000 }).await.unwrap();
         }
     }
     Ok(())
