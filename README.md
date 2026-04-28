@@ -1,14 +1,14 @@
-# RingCore: A Minimalist io_uring Async Runtime
+# RingCore: Asynchronous Rust, Unmasked.
 
-RingCore is a minimal async runtime written from scratch in Rust, built directly on Linux’s io_uring.
+**RingCore** is a minimal, zero-abstraction async runtime built directly on Linux’s `io_uring`. 
 
-It exposes how Rust’s Future-based async model maps to real kernel operations by implementing:
+While mainstream runtimes offer "black-box" convenience, RingCore provides **transparency and surgical control**. It is a "white-box" implementation designed to expose exactly how Rust's `Future` model maps to real kernel operations through:
 
-* a custom task scheduler
-* a waker system
-* an event loop backed by io_uring submission/completion queues
+*   **Surgical Task Scheduling:** A minimalist executor that reveals the raw mechanics of the Rust Waker system.
+*   **Direct-to-Kernel Mapping:** Every operation maps directly to an `io_uring` Submission Queue Entry (SQE) with no intermediate overhead.
+*   **Batch Submission:** Harnesses `io_uring` to group multiple I/O requests into a single system call, nearly eliminating context-switching costs.
 
-Unlike high-level runtimes, RingCore focuses on transparency over abstraction—making it easier to understand how async/await actually works under the hood.
+RingCore prioritizes **insight over abstraction**, making it the definitive reference for understanding how async/await actually works under the hood.
 
 ## Architecture
 
