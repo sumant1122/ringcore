@@ -59,12 +59,7 @@ NET_STD_STRESS=$(run_net_bench "./target/release/examples/std_http_server" "./ta
 NET_TOKIO_STRESS=$(run_net_bench "./target/release/examples/tokio_http_server" "./target/release/examples/tokio_http_stress_client")
 NET_RING_STRESS=$(run_net_bench "./target/release/examples/http_server" "./target/release/examples/http_stress_client")
 
-# 6. Fixed Buffer Gain (100MB File)
-echo -e "[6/6] Benchmarking Fixed Buffer Gain..."
-RING_STD_BUF=$(./target/release/examples/standard_buffer_bench "$TEST_FILE" | grep "in" | sed 's/.*in //')
-RING_FIX_BUF=$(./target/release/examples/fixed_buffer_bench "$TEST_FILE" | grep "in" | sed 's/.*in //')
-
-# 7. Results Summary
+# 6. Results Summary
 echo -e "\n====================================================="
 echo "                FINAL BENCHMARK RESULTS               "
 echo "====================================================="
@@ -74,7 +69,6 @@ printf "%-20s | %-12s | %-12s | %-12s\n" "Seq Cat (100MB)" "$STD_CAT_TIME" "$TOK
 printf "%-20s | %-12s | %-12s | %-12s\n" "Conc Reads (100f)" "$STD_CONC" "$TOKIO_CONC" "$RING_CONC"
 printf "%-20s | %-12s | %-12s | %-12s\n" "HTTP (100 reqs)" "$NET_STD" "$NET_TOKIO" "$NET_RING"
 printf "%-20s | %-12s | %-12s | %-12s\n" "Stress (1k reqs)" "$NET_STD_STRESS" "$NET_TOKIO_STRESS" "$NET_RING_STRESS"
-printf "%-20s | %-12s | %-12s | %-12s\n" "Fixed Buf Gain" "N/A" "N/A" "$RING_STD_BUF -> $RING_FIX_BUF"
 echo "====================================================="
 
 # 8. Timer Accuracy (Informational)

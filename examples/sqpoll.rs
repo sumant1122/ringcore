@@ -11,20 +11,36 @@ async fn handle_client(stream: ringcore::TcpStream) -> io::Result<()> {
     Ok(())
 }
 
-fn main() {
+fn main() -> io::Result<()> {
     // Initialize with SQPOLL
     println!("Initializing with IORING_SETUP_SQPOLL...");
-    init(256, sys::IORING_SETUP_SQPOLL);
+    init(256, sys::IORING_SETUP_SQPOLL)?;
 
     spawn(async {
-        let listener = TcpListener::bind("127.0.0.1:8082").unwrap();
+        let listener = match TcpListener::bind("127.0.0.1:8082") {
+            Ok(l) => l,
+            Err(e) => {
+                eprintln!("Failed to bind: {}", e);
+                return;
+            }
+        };
         println!("SQPOLL Echo server listening on 127.0.0.1:8082");
         loop {
-            let (stream, _) = listener.accept().await.unwrap();
-            spawn(async move {
-                let _ = handle_client(stream).await;
-            });
+            match listener.accept().await {
+                Ok((stream, _)) => {
+                    spawn(async move {
+                        if let Err(e) = handle_client(stream).await {
+                            eprintln!("Echo handle error: {}", e);
+                        }
+                    });
+                }
+                Err(e) => {
+                    eprintln!("Accept error: {}", e);
+                    break;
+                }
+            }
         }
     });
     run();
+    Ok(())
 }

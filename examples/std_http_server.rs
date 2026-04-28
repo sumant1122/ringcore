@@ -13,8 +13,8 @@ fn handle_client(mut stream: std::net::TcpStream) {
     }
 }
 
-fn main() {
-    let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
+fn main() -> std::io::Result<()> {
+    let listener = TcpListener::bind("127.0.0.1:8080")?;
     println!("Standard HTTP server listening on http://127.0.0.1:8080");
     for stream in listener.incoming() {
         if let Ok(stream) = stream {
@@ -23,4 +23,5 @@ fn main() {
             });
         }
     }
+    Ok(())
 }

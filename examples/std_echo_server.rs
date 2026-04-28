@@ -17,12 +17,13 @@ fn handle_client(mut stream: TcpStream) {
     }
 }
 
-fn main() {
-    let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
+fn main() -> std::io::Result<()> {
+    let listener = TcpListener::bind("127.0.0.1:8080")?;
     println!("Standard Echo server listening on 127.0.0.1:8080");
     for stream in listener.incoming() {
         if let Ok(stream) = stream {
             thread::spawn(|| handle_client(stream));
         }
     }
+    Ok(())
 }

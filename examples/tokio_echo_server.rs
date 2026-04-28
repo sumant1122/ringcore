@@ -17,8 +17,8 @@ async fn handle_client(mut stream: tokio::net::TcpStream) {
 }
 
 #[tokio::main]
-async fn main() {
-    let listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
+async fn main() -> std::io::Result<()> {
+    let listener = TcpListener::bind("127.0.0.1:8080").await?;
     println!("Tokio Echo server listening on 127.0.0.1:8080");
     loop {
         if let Ok((stream, _)) = listener.accept().await {

@@ -24,7 +24,7 @@ async fn make_requests(id: usize, n: usize, done: Rc<Cell<usize>>) {
 fn main() {
     let n_tasks = 200;
     let reqs_per_task = 5;
-    let total_expected = n_tasks;
+    let _total_expected = n_tasks;
     let done = Rc::new(Cell::new(0));
 
     println!("RingCore Stress Client: Spawning {} concurrent tasks ({} total requests)...", n_tasks, n_tasks * reqs_per_task);

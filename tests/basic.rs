@@ -19,7 +19,7 @@ fn test_timer() {
 
 #[test]
 fn test_spawn_multiple() {
-    let mut count = 0;
+    let _count = 0;
     // Note: We'd need a way to share state safely in a single-threaded Rc world
     // For now, let's just ensure they both run.
     spawn(async {

@@ -1,8 +1,11 @@
+//! Low-level `io_uring` abstraction.
+
 use crate::sys::*;
 use std::io;
 use std::ptr;
 use std::sync::atomic::{AtomicU32, Ordering};
 
+/// An abstraction over a Linux `io_uring` instance.
 pub struct IoUring {
     fd: i32,
     _sq_ptr: *mut u8,
@@ -22,13 +25,17 @@ pub struct IoUring {
 }
 
 impl IoUring {
+    /// Create a new `IoUring` with the specified number of entries.
     pub fn new(entries: u32) -> io::Result<Self> {
         Self::with_flags(entries, 0)
     }
 
+    /// Create a new `IoUring` with specified entries and flags.
     pub fn with_flags(entries: u32, flags: u32) -> io::Result<Self> {
-        let mut params = io_uring_params::default();
-        params.flags = flags;
+        let mut params = io_uring_params {
+            flags,
+            ..Default::default()
+        };
         let fd = unsafe { io_uring_setup(entries, &mut params) };
         if fd < 0 {
             return Err(io::Error::last_os_error());
@@ -93,6 +100,8 @@ impl IoUring {
         }
     }
 
+    /// Submit a single SQE to the ring.
+    /// Returns `true` if submitted successfully, `false` if the queue is full.
     pub fn submit(&self, sqe: io_uring_sqe) -> bool {
         unsafe {
             let tail = (*self.sq_tail_ptr).load(Ordering::Relaxed);
@@ -111,6 +120,33 @@ impl IoUring {
         }
     }
 
+    /// Submit multiple SQEs to the ring.
+    /// Returns the number of SQEs successfully submitted.
+    pub fn submit_multiple(&self, sqes: &[io_uring_sqe]) -> usize {
+        unsafe {
+            let mut tail = (*self.sq_tail_ptr).load(Ordering::Relaxed);
+            let head = (*self.sq_head_ptr).load(Ordering::Acquire);
+            
+            let mut count = 0;
+            for sqe in sqes {
+                if tail - head >= self.sq_entries {
+                    break;
+                }
+                let index = tail & self.sq_mask;
+                *self.sqes_ptr.add(index as usize) = *sqe;
+                *self.sq_array.add(index as usize) = index;
+                tail += 1;
+                count += 1;
+            }
+            
+            if count > 0 {
+                (*self.sq_tail_ptr).store(tail, Ordering::Release);
+            }
+            count
+        }
+    }
+
+    /// Get the number of SQEs currently waiting in the queue.
     pub fn pending_sqes(&self) -> u32 {
         unsafe {
             let tail = (*self.sq_tail_ptr).load(Ordering::Relaxed);
@@ -119,7 +155,12 @@ impl IoUring {
         }
     }
 
-    pub fn register_buffers(&self, iovecs: *const libc::iovec, nr: u32) -> io::Result<()> {
+    /// Register fixed buffers with the ring.
+    /// 
+    /// # Safety
+    /// The caller must ensure that `iovecs` points to a valid array of `libc::iovec`
+    /// and that the buffers described by them remain valid for the duration of the registration.
+    pub unsafe fn register_buffers(&self, iovecs: *const libc::iovec, nr: u32) -> io::Result<()> {
         let res = unsafe {
             libc::syscall(
                 SYS_IO_URING_REGISTER as i64,
@@ -136,6 +177,7 @@ impl IoUring {
         }
     }
 
+    /// Enter the kernel to submit SQEs and/or wait for completions.
     pub fn enter(&self, to_submit: u32, min_complete: u32) -> io::Result<u32> {
         let res = unsafe {
             io_uring_enter(
@@ -153,6 +195,7 @@ impl IoUring {
         }
     }
 
+    /// Poll for any available completions in the CQ.
     pub fn poll_completions(&self) -> Vec<io_uring_cqe> {
         let mut completions = Vec::new();
         unsafe {

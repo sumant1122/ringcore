@@ -12,21 +12,35 @@ async fn serve_file(stream: ringcore::TcpStream, path: String) -> io::Result<()>
     Ok(())
 }
 
-fn main() {
+fn main() -> io::Result<()> {
     // Create a dummy file to serve
-    std::fs::write("index.html", "<h1>Hello from io_uring!</h1>").unwrap();
+    std::fs::write("index.html", "<h1>Hello from io_uring!</h1>")?;
 
     spawn(async {
-        let listener = TcpListener::bind("127.0.0.1:8081").unwrap();
+        let listener = match TcpListener::bind("127.0.0.1:8081") {
+            Ok(l) => l,
+            Err(e) => {
+                eprintln!("Failed to bind: {}", e);
+                return;
+            }
+        };
         println!("File server listening on http://127.0.0.1:8081");
         loop {
-            let (stream, _) = listener.accept().await.unwrap();
-            spawn(async move {
-                if let Err(e) = serve_file(stream, "index.html".to_string()).await {
-                    eprintln!("Serve error: {}", e);
+            match listener.accept().await {
+                Ok((stream, _)) => {
+                    spawn(async move {
+                        if let Err(e) = serve_file(stream, "index.html".to_string()).await {
+                            eprintln!("Serve error: {}", e);
+                        }
+                    });
                 }
-            });
+                Err(e) => {
+                    eprintln!("Accept error: {}", e);
+                    break;
+                }
+            }
         }
     });
     run();
+    Ok(())
 }

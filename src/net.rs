@@ -40,7 +40,7 @@ impl TcpListener {
         if let SocketAddr::V4(v4) = addr {
             sa.sin_addr.s_addr = u32::from_ne_bytes(v4.ip().octets());
         } else {
-            unimplemented!("IPv6 not supported");
+            return Err(io::Error::new(io::ErrorKind::Unsupported, "IPv6 not supported"));
         }
 
         unsafe {
@@ -114,7 +114,7 @@ impl TcpStream {
         if let SocketAddr::V4(v4) = addr {
             sa.sin_addr.s_addr = u32::from_ne_bytes(v4.ip().octets());
         } else {
-            unimplemented!("IPv6 not supported");
+            return Err(io::Error::new(io::ErrorKind::Unsupported, "IPv6 not supported"));
         }
 
         op::connect(

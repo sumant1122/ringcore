@@ -13,16 +13,32 @@ async fn handle_http(stream: ringcore::TcpStream) -> io::Result<()> {
     Ok(())
 }
 
-fn main() {
+fn main() -> io::Result<()> {
     spawn(async {
-        let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
+        let listener = match TcpListener::bind("127.0.0.1:8080") {
+            Ok(l) => l,
+            Err(e) => {
+                eprintln!("Failed to bind: {}", e);
+                return;
+            }
+        };
         println!("HTTP server listening on http://127.0.0.1:8080");
         loop {
-            let (stream, _) = listener.accept().await.unwrap();
-            spawn(async move {
-                let _ = handle_http(stream).await;
-            });
+            match listener.accept().await {
+                Ok((stream, _)) => {
+                    spawn(async move {
+                        if let Err(e) = handle_http(stream).await {
+                            eprintln!("HTTP handle error: {}", e);
+                        }
+                    });
+                }
+                Err(e) => {
+                    eprintln!("Accept error: {}", e);
+                    break;
+                }
+            }
         }
     });
     run();
+    Ok(())
 }

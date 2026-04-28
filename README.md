@@ -78,12 +78,11 @@ Total time for sequential and high-concurrency workloads.
 
 *RingCore's single-threaded architecture excels at high-concurrency without the task-scheduling overhead seen in multi-threaded runtimes.*
 
-### 3. Advanced Features: Fixed Buffers
-By pre-registering buffers with the kernel, RingCore eliminates page table walk overhead.
+### 3. Advanced Features: Kernel-Level Task Chaining
+Using `IOSQE_IO_LINK`, RingCore can batch dependent operations (like Read -> Write) so the kernel executes them back-to-back without returning to userspace.
 
-| Operation | Standard Buffer | **Fixed Buffer** | Improvement |
-|-----------|-----------------|------------------|-------------|
-| 100MB Read | 25.3ms | **25.1ms** | **~1%** |
+*   **Transparency:** Shows how to eliminate userspace "ping-pong" for dependent I/O tasks.
+*   **Efficiency:** Batches multiple SQEs into a single `io_uring_enter` call.
 
 ## Examples
 
@@ -118,8 +117,8 @@ Run any example using `cargo run --example <name>`.
 ### Tier 4: Advanced Features
 - **SQPOLL:** `sudo cargo run --example sqpoll`
   - Kernel-side SQ polling (requires `sudo` for `CAP_SYS_ADMIN`).
-- **Fixed Buffers:** `cargo run --example fixed_buffers`
-  - Pre-registered kernel buffers for zero-copy.
+- **Linked Cat:** `cargo run --example linked_cat -- <file>`
+  - Chaining Read + Write operations at the kernel level via `IOSQE_IO_LINK`.
 - **Multishot Accept:** `cargo run --example multishot_accept`
   - One SQE generating infinite connection CQEs.
 

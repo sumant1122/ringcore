@@ -9,26 +9,33 @@ use std::collections::{HashMap, VecDeque};
 use std::future::Future;
 use std::pin::Pin;
 use std::rc::Rc;
-use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
+use std::task::{Context, RawWaker, RawWakerVTable, Waker};
 
 thread_local! {
     /// The global `io_uring` instance for the current thread.
-    pub static RING: RefCell<IoUring> = RefCell::new(IoUring::new(256).expect("Failed to init io_uring"));
+    pub static RING: RefCell<Option<IoUring>> = RefCell::new(IoUring::new(256).ok());
+    /// Map of pending wakers indexed by user_data.
     pub static WAKERS: RefCell<HashMap<u64, Waker>> = RefCell::new(HashMap::new());
+    /// Map of operation results indexed by user_data.
     pub static RESULTS: RefCell<HashMap<u64, VecDeque<i32>>> = RefCell::new(HashMap::new());
+    /// Map indicating if an operation is multishot.
     pub static MULTISHOT: RefCell<HashMap<u64, bool>> = RefCell::new(HashMap::new());
-    pub static TASKS: RefCell<VecDeque<Rc<Task>>> = RefCell::new(VecDeque::new());
+    /// Queue of tasks ready to be polled.
+    pub static TASKS: RefCell<VecDeque<Rc<Task>>> = const { RefCell::new(VecDeque::new()) };
 }
 
 /// Initialize the global `io_uring` instance with custom parameters.
-pub fn init(entries: u32, flags: u32) {
+pub fn init(entries: u32, flags: u32) -> std::io::Result<()> {
+    let ring = IoUring::with_flags(entries, flags)?;
     RING.with(|r| {
-        *r.borrow_mut() = IoUring::with_flags(entries, flags).expect("Failed to re-init io_uring");
+        *r.borrow_mut() = Some(ring);
     });
+    Ok(())
 }
 
 /// A handle to a spawned asynchronous task.
 pub struct Task {
+    /// The pinned future representing the task's work.
     pub future: RefCell<Pin<Box<dyn Future<Output = ()>>>>,
 }
 
@@ -83,22 +90,36 @@ pub fn run() {
             let waker = task.waker();
             let mut cx = Context::from_waker(&waker);
             let mut future = task.future.borrow_mut();
-            if let Poll::Ready(_) = future.as_mut().poll(&mut cx) {
+            if future.as_mut().poll(&mut cx).is_ready() {
                 // Task finished
             }
             progress = true;
         }
 
         // 2. Submit SQEs
-        let pending = RING.with(|r| r.borrow().pending_sqes());
+        let pending = RING.with(|r| {
+            r.borrow()
+                .as_ref()
+                .map(|ring| ring.pending_sqes())
+                .unwrap_or(0)
+        });
         if pending > 0 {
-            if let Err(e) = RING.with(|r| r.borrow().enter(pending, 0)) {
-                eprintln!("io_uring_enter submit error: {}", e);
-            }
+            RING.with(|r| {
+                if let Some(ring) = r.borrow().as_ref()
+                    && let Err(e) = ring.enter(pending, 0)
+                {
+                    eprintln!("io_uring_enter submit error: {}", e);
+                }
+            });
         }
 
         // 3. Poll CQEs
-        let completions = RING.with(|r| r.borrow().poll_completions());
+        let completions = RING.with(|r| {
+            r.borrow()
+                .as_ref()
+                .map(|ring| ring.poll_completions())
+                .unwrap_or_default()
+        });
         for cqe in completions {
             let is_multishot = MULTISHOT.with(|m| *m.borrow().get(&cqe.user_data).unwrap_or(&false));
             
@@ -130,13 +151,16 @@ pub fn run() {
             }
             
             // Wait for at least one completion
-            let to_submit = RING.with(|r| r.borrow().pending_sqes());
-            // eprintln!("DEBUG: blocking on enter, pending_wakers={}, pending_tasks={}, to_submit={}", pending_wakers, pending_tasks, to_submit);
-            if let Err(e) = RING.with(|r| r.borrow().enter(to_submit, 1)) {
-                if e.kind() != std::io::ErrorKind::Interrupted {
-                    eprintln!("io_uring_enter wait error: {}", e);
+            RING.with(|r| {
+                if let Some(ring) = r.borrow().as_ref() {
+                    let to_submit = ring.pending_sqes();
+                    if let Err(e) = ring.enter(to_submit, 1)
+                        && e.kind() != std::io::ErrorKind::Interrupted
+                    {
+                        eprintln!("io_uring_enter wait error: {}", e);
+                    }
                 }
-            }
+            });
         }
     }
 }

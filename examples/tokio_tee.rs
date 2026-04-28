@@ -1,5 +1,5 @@
 use tokio::fs::File;
-use tokio::io::{self, AsyncReadExt, AsyncWriteExt};
+use tokio::io::{self, AsyncWriteExt};
 use std::env;
 
 #[tokio::main]
@@ -14,7 +14,7 @@ async fn main() -> io::Result<()> {
     let mut f2 = File::create(&args[2]).await?;
     
     let mut buf = [0u8; 4096];
-    let mut stdin = io::stdin();
+    let _stdin = io::stdin();
     
     loop {
         // Standard stdin isn't easily async without blocking or special crates,
@@ -24,7 +24,7 @@ async fn main() -> io::Result<()> {
             let mut buf = [0u8; 4096];
             let n = std::io::Read::read(&mut stdin, &mut buf);
             (n, buf)
-        }).await.unwrap() {
+        }).await.map_err(|e| io::Error::new(io::ErrorKind::Other, e))? {
             (Ok(0), _) => break,
             (Ok(n), b) => {
                 buf[..n].copy_from_slice(&b[..n]);
