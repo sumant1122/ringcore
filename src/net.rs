@@ -1,8 +1,11 @@
+//! Asynchronous Networking operations.
+
 use crate::op;
 use std::io;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::os::unix::io::{RawFd, AsRawFd};
 
+/// A TCP socket server, listening for connections.
 pub struct TcpListener {
     fd: RawFd,
 }
@@ -14,10 +17,12 @@ impl AsRawFd for TcpListener {
 }
 
 impl TcpListener {
+    /// Create a TcpListener from a raw file descriptor.
     pub fn from_raw_fd(fd: RawFd) -> Self {
         TcpListener { fd }
     }
 
+    /// Bind to an address and start listening for connections.
     pub fn bind<A: ToSocketAddrs>(addr: A) -> io::Result<Self> {
         let addr = addr.to_socket_addrs()?.next().ok_or(io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -53,6 +58,7 @@ impl TcpListener {
         Ok(TcpListener { fd })
     }
 
+    /// Accept a new incoming connection.
     pub async fn accept(&self) -> io::Result<(TcpStream, SocketAddr)> {
         let mut addr: libc::sockaddr_in = unsafe { std::mem::zeroed() };
         let mut len = std::mem::size_of::<libc::sockaddr_in>() as libc::socklen_t;
@@ -73,6 +79,7 @@ impl Drop for TcpListener {
     }
 }
 
+/// A TCP stream between a local and a remote socket.
 pub struct TcpStream {
     fd: RawFd,
 }
@@ -84,10 +91,12 @@ impl AsRawFd for TcpStream {
 }
 
 impl TcpStream {
+    /// Create a TcpStream from a raw file descriptor.
     pub fn from_raw_fd(fd: RawFd) -> Self {
         TcpStream { fd }
     }
 
+    /// Connect to a remote address.
     pub async fn connect<A: ToSocketAddrs>(addr: A) -> io::Result<Self> {
         let addr = addr.to_socket_addrs()?.next().ok_or(io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -118,11 +127,13 @@ impl TcpStream {
         Ok(TcpStream { fd })
     }
 
+    /// Read data from the stream into the provided buffer.
     pub async fn read(&self, buf: &mut [u8]) -> io::Result<usize> {
         let res = op::read(self.fd, buf.as_mut_ptr(), buf.len() as u32, 0).await?;
         Ok(res as usize)
     }
 
+    /// Write data from the provided buffer into the stream.
     pub async fn write(&self, buf: &[u8]) -> io::Result<usize> {
         let res = op::write(self.fd, buf.as_ptr(), buf.len() as u32, 0).await?;
         Ok(res as usize)

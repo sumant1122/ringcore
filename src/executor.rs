@@ -1,3 +1,8 @@
+//! The RingCore Task Executor.
+//! 
+//! This module implements a single-threaded executor that manages asynchronous tasks
+//! and coordinates with the `io_uring` instance for I/O event notification.
+
 use crate::ring::IoUring;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
@@ -7,6 +12,7 @@ use std::rc::Rc;
 use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
 
 thread_local! {
+    /// The global `io_uring` instance for the current thread.
     pub static RING: RefCell<IoUring> = RefCell::new(IoUring::new(256).expect("Failed to init io_uring"));
     pub static WAKERS: RefCell<HashMap<u64, Waker>> = RefCell::new(HashMap::new());
     pub static RESULTS: RefCell<HashMap<u64, VecDeque<i32>>> = RefCell::new(HashMap::new());
@@ -14,12 +20,14 @@ thread_local! {
     pub static TASKS: RefCell<VecDeque<Rc<Task>>> = RefCell::new(VecDeque::new());
 }
 
+/// Initialize the global `io_uring` instance with custom parameters.
 pub fn init(entries: u32, flags: u32) {
     RING.with(|r| {
         *r.borrow_mut() = IoUring::with_flags(entries, flags).expect("Failed to re-init io_uring");
     });
 }
 
+/// A handle to a spawned asynchronous task.
 pub struct Task {
     pub future: RefCell<Pin<Box<dyn Future<Output = ()>>>>,
 }
@@ -51,6 +59,7 @@ static VTABLE: RawWakerVTable = RawWakerVTable::new(
     },
 );
 
+/// Spawn a new task into the current thread's executor.
 pub fn spawn<F>(future: F)
 where
     F: Future<Output = ()> + 'static,
@@ -61,6 +70,10 @@ where
     TASKS.with(|t| t.borrow_mut().push_back(task));
 }
 
+/// Run the executor loop until all tasks have completed.
+/// 
+/// This function will block the current thread, polling tasks and waiting for
+/// `io_uring` completions in a loop.
 pub fn run() {
     loop {
         let mut progress = false;

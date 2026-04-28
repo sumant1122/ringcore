@@ -2,6 +2,13 @@
 name = "ringcore"
 version = "0.1.0"
 edition = "2024"
+authors = ["RingCore Contributors"]
+description = "A minimalist io_uring async runtime for Rust, built from scratch for transparency."
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/yourusername/ringcore"
+keywords = ["io_uring", "async", "runtime", "linux"]
+categories = ["asynchronous", "os::linux-apis"]
 
 [dependencies]
 libc = "0.2"
