@@ -6,7 +6,7 @@ authors = ["RingCore Contributors"]
 description = "A minimalist io_uring async runtime for Rust, built from scratch for transparency."
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/yourusername/ringcore"
+repository = "https://github.com/sumant1122/ringcore"
 keywords = ["io_uring", "async", "runtime", "linux"]
 categories = ["asynchronous", "os::linux-apis"]
 
