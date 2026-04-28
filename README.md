@@ -1,6 +1,18 @@
 # RingCore: Asynchronous Rust, Unmasked.
 
+[![Crates.io](https://img.shields.io/crates/v/ringcore.svg)](https://crates.io/crates/ringcore)
+[![Documentation](https://docs.rs/ringcore/badge.svg)](https://docs.rs/ringcore)
+
 **RingCore** is a minimal, zero-abstraction async runtime built directly on Linux’s `io_uring`. 
+
+## Usage
+
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+ringcore = "0.1"
+```
 
 While mainstream runtimes offer "black-box" convenience, RingCore provides **transparency and surgical control**. It is a "white-box" implementation designed to expose exactly how Rust's `Future` model maps to real kernel operations through:
 
